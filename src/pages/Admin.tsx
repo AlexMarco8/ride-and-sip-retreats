@@ -246,7 +246,29 @@ const Admin = () => {
       </header>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Create event form */}
+        {/* Tabs */}
+        <div className="flex gap-1 mb-8 border-b border-border">
+          {[
+            { key: "events" as const, label: "Events", icon: <Users className="h-4 w-4" /> },
+            { key: "newsletter" as const, label: "Nyhetsbrev", icon: <Mail className="h-4 w-4" /> },
+            { key: "interest" as const, label: "Intresseanmälningar", icon: <UserCheck className="h-4 w-4" /> },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                activeTab === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "events" && (
+        <>
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-display text-xl text-foreground">Events</h2>
           <Button variant="hero" onClick={() => setShowCreate(!showCreate)}>
