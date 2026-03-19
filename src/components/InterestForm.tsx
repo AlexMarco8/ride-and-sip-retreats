@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Users } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const InterestForm = () => {
   const [formData, setFormData] = useState({
@@ -21,21 +22,30 @@ const InterestForm = () => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await supabase
+      .from("interest_leads")
+      .insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        message: formData.message || null,
+      });
     
-    toast({
-      title: "Intresseanmälan mottagen!",
-      description: "Vi återkommer till dig inom kort med mer information.",
-    });
+    if (error) {
+      toast({ title: "Något gick fel", description: "Försök igen senare.", variant: "destructive" });
+    } else {
+      toast({
+        title: "Intresseanmälan mottagen!",
+        description: "Vi återkommer till dig inom kort med mer information.",
+      });
+      setFormData({ name: "", email: "", phone: "", message: "" });
+    }
     
-    setFormData({ name: "", email: "", phone: "", message: "" });
     setIsLoading(false);
   };
 
   return (
     <section id="interest" className="py-24 bg-background relative overflow-hidden">
-      {/* Decorative background */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary rounded-full blur-3xl" />

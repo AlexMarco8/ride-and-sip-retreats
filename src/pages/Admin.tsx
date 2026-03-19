@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
-import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft } from "lucide-react";
+import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
@@ -22,6 +22,7 @@ const Admin = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"events" | "newsletter" | "interest">("events");
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -97,6 +98,26 @@ const Admin = () => {
       return data;
     },
     enabled: !!selectedEventId,
+  });
+
+  const { data: newsletterSubs } = useQuery({
+    queryKey: ["admin-newsletter"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("newsletter_subscribers").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: interestLeads } = useQuery({
+    queryKey: ["admin-interest"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("interest_leads").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
   });
 
   const createMutation = useMutation({
@@ -225,7 +246,29 @@ const Admin = () => {
       </header>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Create event form */}
+        {/* Tabs */}
+        <div className="flex gap-1 mb-8 border-b border-border">
+          {[
+            { key: "events" as const, label: "Events", icon: <Users className="h-4 w-4" /> },
+            { key: "newsletter" as const, label: "Nyhetsbrev", icon: <Mail className="h-4 w-4" /> },
+            { key: "interest" as const, label: "Intresseanmälningar", icon: <UserCheck className="h-4 w-4" /> },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                activeTab === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "events" && (
+        <>
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-display text-xl text-foreground">Events</h2>
           <Button variant="hero" onClick={() => setShowCreate(!showCreate)}>
@@ -369,6 +412,54 @@ const Admin = () => {
             <p className="text-center text-muted-foreground py-12">Inga events ännu. Skapa ditt första event!</p>
           )}
         </div>
+        </>
+        )}
+
+        {activeTab === "newsletter" && (
+          <div className="space-y-4">
+            <h2 className="font-display text-xl text-foreground mb-4">
+              Nyhetsbrevsprenumeranter ({newsletterSubs?.length || 0})
+            </h2>
+            {newsletterSubs && newsletterSubs.length > 0 ? (
+              newsletterSubs.map((sub) => (
+                <div key={sub.id} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-foreground">{sub.email}</p>
+                    <p className="text-sm text-muted-foreground">{format(new Date(sub.created_at), "d MMMM yyyy HH:mm", { locale: sv })}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-12">Inga prenumeranter ännu.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === "interest" && (
+          <div className="space-y-4">
+            <h2 className="font-display text-xl text-foreground mb-4">
+              Intresseanmälningar ({interestLeads?.length || 0})
+            </h2>
+            {interestLeads && interestLeads.length > 0 ? (
+              interestLeads.map((lead) => (
+                <div key={lead.id} className="bg-card border border-border rounded-lg p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <p className="text-foreground font-medium">{lead.name}</p>
+                      <p className="text-sm text-muted-foreground">{lead.email}{lead.phone && ` · ${lead.phone}`}</p>
+                      {lead.message && <p className="text-cream-muted text-sm mt-2">{lead.message}</p>}
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {format(new Date(lead.created_at), "d MMM yyyy", { locale: sv })}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-12">Inga intresseanmälningar ännu.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

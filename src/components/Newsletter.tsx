@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Newsletter = () => {
   const [email, setEmail] = useState("");
@@ -15,15 +16,20 @@ const Newsletter = () => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await supabase
+      .from("newsletter_subscribers")
+      .insert({ email });
     
-    toast({
-      title: "Tack för din anmälan!",
-      description: "Du kommer nu få våra senaste nyheter och uppdateringar.",
-    });
+    if (error) {
+      toast({ title: "Något gick fel", description: "Försök igen senare.", variant: "destructive" });
+    } else {
+      toast({
+        title: "Tack för din anmälan!",
+        description: "Du kommer nu få våra senaste nyheter och uppdateringar.",
+      });
+      setEmail("");
+    }
     
-    setEmail("");
     setIsLoading(false);
   };
 
