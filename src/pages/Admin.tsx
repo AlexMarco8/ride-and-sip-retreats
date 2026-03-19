@@ -412,6 +412,54 @@ const Admin = () => {
             <p className="text-center text-muted-foreground py-12">Inga events ännu. Skapa ditt första event!</p>
           )}
         </div>
+        </>
+        )}
+
+        {activeTab === "newsletter" && (
+          <div className="space-y-4">
+            <h2 className="font-display text-xl text-foreground mb-4">
+              Nyhetsbrevsprenumeranter ({newsletterSubs?.length || 0})
+            </h2>
+            {newsletterSubs && newsletterSubs.length > 0 ? (
+              newsletterSubs.map((sub) => (
+                <div key={sub.id} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-foreground">{sub.email}</p>
+                    <p className="text-sm text-muted-foreground">{format(new Date(sub.created_at), "d MMMM yyyy HH:mm", { locale: sv })}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-12">Inga prenumeranter ännu.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === "interest" && (
+          <div className="space-y-4">
+            <h2 className="font-display text-xl text-foreground mb-4">
+              Intresseanmälningar ({interestLeads?.length || 0})
+            </h2>
+            {interestLeads && interestLeads.length > 0 ? (
+              interestLeads.map((lead) => (
+                <div key={lead.id} className="bg-card border border-border rounded-lg p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <p className="text-foreground font-medium">{lead.name}</p>
+                      <p className="text-sm text-muted-foreground">{lead.email}{lead.phone && ` · ${lead.phone}`}</p>
+                      {lead.message && <p className="text-cream-muted text-sm mt-2">{lead.message}</p>}
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {format(new Date(lead.created_at), "d MMM yyyy", { locale: sv })}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-12">Inga intresseanmälningar ännu.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
