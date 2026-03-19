@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
-import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft } from "lucide-react";
+import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
