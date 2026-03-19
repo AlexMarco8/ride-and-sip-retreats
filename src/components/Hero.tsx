@@ -29,7 +29,7 @@ const Hero = () => {
           <img 
             src={logoImage} 
             alt="Springtouring.se" 
-            className="h-36 md:h-52 mx-auto mb-8 object-contain"
+            className="h-48 md:h-72 mx-auto mb-2 object-contain"
           />
         </div>
         
