@@ -19,6 +19,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
@@ -62,8 +63,14 @@ const Admin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
-    if (error) toast({ title: "Inloggning misslyckades", description: error.message, variant: "destructive" });
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword });
+      if (error) toast({ title: "Registrering misslyckades", description: error.message, variant: "destructive" });
+      else toast({ title: "Konto skapat!", description: "Kontakta en admin för att få behörighet." });
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+      if (error) toast({ title: "Inloggning misslyckades", description: error.message, variant: "destructive" });
+    }
   };
 
   const handleLogout = async () => {
@@ -146,7 +153,9 @@ const Admin = () => {
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center">
             <h1 className="font-display text-3xl font-semibold text-foreground mb-2">Admin</h1>
-            <p className="text-muted-foreground text-sm">Logga in för att hantera events</p>
+            <p className="text-muted-foreground text-sm">
+              {isSignUp ? "Skapa konto" : "Logga in för att hantera events"}
+            </p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
@@ -165,8 +174,16 @@ const Admin = () => {
               className="bg-secondary border-border"
               required
             />
-            <Button type="submit" variant="hero" className="w-full">Logga in</Button>
+            <Button type="submit" variant="hero" className="w-full">
+              {isSignUp ? "Skapa konto" : "Logga in"}
+            </Button>
           </form>
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm text-primary hover:underline w-full text-center"
+          >
+            {isSignUp ? "Har redan konto? Logga in" : "Inget konto? Skapa ett"}
+          </button>
           <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground justify-center">
             <ArrowLeft className="h-4 w-4" /> Tillbaka till startsidan
           </Link>
