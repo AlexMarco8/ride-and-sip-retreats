@@ -19,6 +19,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
