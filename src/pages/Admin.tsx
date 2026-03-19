@@ -22,6 +22,7 @@ const Admin = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"events" | "newsletter" | "interest">("events");
 
   const [newEvent, setNewEvent] = useState({
     title: "",
