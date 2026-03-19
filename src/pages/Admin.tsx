@@ -100,6 +100,26 @@ const Admin = () => {
     enabled: !!selectedEventId,
   });
 
+  const { data: newsletterSubs } = useQuery({
+    queryKey: ["admin-newsletter"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("newsletter_subscribers").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
+  const { data: interestLeads } = useQuery({
+    queryKey: ["admin-interest"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("interest_leads").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin,
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("events").insert({
