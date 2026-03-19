@@ -2,9 +2,11 @@ import heroMotorcycles from "@/assets/hero-motorcycles.jpeg";
 import gasStation from "@/assets/gas-station.jpeg";
 import mountainRide from "@/assets/mountain-ride.jpeg";
 import bmwBike from "@/assets/bmw-bike.jpeg";
+import castleTown from "@/assets/castle-town-2.jpeg";
 
 const images = [
   { src: heroMotorcycles, alt: "Motorcyklar parkerade i en europeisk stad" },
+  { src: castleTown, alt: "Europeisk stad med slott" },
   { src: mountainRide, alt: "Motorcykeltur genom bergen" },
   { src: gasStation, alt: "Tankpaus under resan" },
   { src: bmwBike, alt: "BMW motorcykel med utsikt" },
