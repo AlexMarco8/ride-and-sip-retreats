@@ -63,8 +63,14 @@ const Admin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
-    if (error) toast({ title: "Inloggning misslyckades", description: error.message, variant: "destructive" });
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword });
+      if (error) toast({ title: "Registrering misslyckades", description: error.message, variant: "destructive" });
+      else toast({ title: "Konto skapat!", description: "Kontakta en admin för att få behörighet." });
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+      if (error) toast({ title: "Inloggning misslyckades", description: error.message, variant: "destructive" });
+    }
   };
 
   const handleLogout = async () => {
