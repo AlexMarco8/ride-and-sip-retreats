@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/castle-town.jpeg";
-import logoImage from "@/assets/logo.jpeg";
+import logoImage from "@/assets/logo.png";
 
 const Hero = () => {
   const scrollToNewsletter = () => {
