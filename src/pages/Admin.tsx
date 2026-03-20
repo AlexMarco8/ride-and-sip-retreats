@@ -86,6 +86,7 @@ const Admin = () => {
     setIsAdmin(false);
   };
 
+  // Queries
   const { data: events } = useQuery({
     queryKey: ["admin-events"],
     queryFn: async () => {
@@ -126,6 +127,7 @@ const Admin = () => {
     enabled: isAdmin,
   });
 
+  // Mutations
   const createMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("events").insert({
@@ -149,6 +151,29 @@ const Admin = () => {
     onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingEventId || !editForm) return;
+      const { error } = await supabase.from("events").update({
+        title: editForm.title,
+        description: editForm.description || null,
+        location: editForm.location || null,
+        event_date: new Date(editForm.event_date).toISOString(),
+        max_participants: editForm.max_participants ? parseInt(editForm.max_participants) : null,
+        is_published: editForm.is_published,
+        route_points: editRoutePoints.length > 0 ? editRoutePoints : [],
+      }).eq("id", editingEventId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-events"] });
+      toast({ title: "Event uppdaterat!" });
+      setEditingEventId(null);
+      setEditForm(null);
+    },
+    onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
+  });
+
   const togglePublish = useMutation({
     mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
       const { error } = await supabase.from("events").update({ is_published: !published }).eq("id", id);
@@ -168,6 +193,37 @@ const Admin = () => {
     },
   });
 
+  const startEditing = (event: any) => {
+    const dateStr = new Date(event.event_date).toISOString().slice(0, 16);
+    setEditingEventId(event.id);
+    setEditForm({
+      title: event.title,
+      description: event.description || "",
+      location: event.location || "",
+      event_date: dateStr,
+      max_participants: event.max_participants?.toString() || "",
+      is_published: event.is_published,
+    });
+    const pts = Array.isArray(event.route_points) ? event.route_points as RoutePoint[] : [];
+    setEditRoutePoints(pts);
+  };
+
+  const cancelEditing = () => {
+    setEditingEventId(null);
+    setEditForm(null);
+  };
+
+  const toggleExpand = (eventId: string) => {
+    if (expandedEventId === eventId) {
+      setExpandedEventId(null);
+      cancelEditing();
+    } else {
+      setExpandedEventId(eventId);
+      cancelEditing();
+    }
+  };
+
+  // Loading / Login / Access denied screens
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -187,30 +243,11 @@ const Admin = () => {
             </p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="E-post"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              className="bg-secondary border-border"
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Lösenord"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              className="bg-secondary border-border"
-              required
-            />
-            <Button type="submit" variant="hero" className="w-full">
-              {isSignUp ? "Skapa konto" : "Logga in"}
-            </Button>
+            <Input type="email" placeholder="E-post" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="bg-secondary border-border" required />
+            <Input type="password" placeholder="Lösenord" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="bg-secondary border-border" required />
+            <Button type="submit" variant="hero" className="w-full">{isSignUp ? "Skapa konto" : "Logga in"}</Button>
           </form>
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-primary hover:underline w-full text-center"
-          >
+          <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-primary hover:underline w-full text-center">
             {isSignUp ? "Har redan konto? Logga in" : "Inget konto? Skapa ett"}
           </button>
           <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground justify-center">
@@ -238,13 +275,10 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border px-6 py-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
+            <Link to="/" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
             <h1 className="font-display text-2xl font-semibold text-foreground">Backoffice</h1>
           </div>
           <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground">
@@ -265,9 +299,7 @@ const Admin = () => {
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === tab.key
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                activeTab === tab.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.icon} {tab.label}
@@ -276,154 +308,216 @@ const Admin = () => {
         </div>
 
         {activeTab === "events" && (
-        <>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-display text-xl text-foreground">Events</h2>
-          <Button variant="hero" onClick={() => setShowCreate(!showCreate)}>
-            <Plus className="h-4 w-4 mr-2" /> Nytt event
-          </Button>
-        </div>
+          <>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-display text-xl text-foreground">Events</h2>
+              <Button variant="hero" onClick={() => setShowCreate(!showCreate)}>
+                <Plus className="h-4 w-4 mr-2" /> Nytt event
+              </Button>
+            </div>
 
-        {showCreate && (
-          <div className="bg-card border border-border rounded-lg p-6 mb-8">
-            <h3 className="font-display text-lg text-foreground mb-4">Skapa nytt event</h3>
-            <form
-              onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <Input
-                placeholder="Titel *"
-                value={newEvent.title}
-                onChange={(e) => setNewEvent(p => ({ ...p, title: e.target.value }))}
-                className="bg-secondary border-border"
-                required
-              />
-              <Input
-                placeholder="Plats"
-                value={newEvent.location}
-                onChange={(e) => setNewEvent(p => ({ ...p, location: e.target.value }))}
-                className="bg-secondary border-border"
-              />
-              <Input
-                type="datetime-local"
-                value={newEvent.event_date}
-                onChange={(e) => setNewEvent(p => ({ ...p, event_date: e.target.value }))}
-                className="bg-secondary border-border"
-                required
-              />
-              <Input
-                type="number"
-                placeholder="Max deltagare"
-                value={newEvent.max_participants}
-                onChange={(e) => setNewEvent(p => ({ ...p, max_participants: e.target.value }))}
-                className="bg-secondary border-border"
-              />
-              <Textarea
-                placeholder="Beskrivning"
-                value={newEvent.description}
-                onChange={(e) => setNewEvent(p => ({ ...p, description: e.target.value }))}
-                className="bg-secondary border-border md:col-span-2"
-              />
-              <div className="md:col-span-2">
-                <RouteEditor points={routePoints} onChange={setRoutePoints} />
-              </div>
-              <div className="md:col-span-2 flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newEvent.is_published}
-                    onChange={(e) => setNewEvent(p => ({ ...p, is_published: e.target.checked }))}
-                    className="accent-primary"
-                  />
-                  Publicera direkt
-                </label>
-                <Button type="submit" variant="hero" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Skapar..." : "Skapa event"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Events list */}
-        <div className="space-y-4">
-          {events?.map((event) => (
-            <div key={event.id} className="bg-card border border-border rounded-lg p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-display text-xl text-foreground">{event.title}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${event.is_published ? "bg-green-900/50 text-green-400" : "bg-muted text-muted-foreground"}`}>
-                      {event.is_published ? "Publicerad" : "Utkast"}
-                    </span>
+            {showCreate && (
+              <div className="bg-card border border-border rounded-lg p-6 mb-8">
+                <h3 className="font-display text-lg text-foreground mb-4">Skapa nytt event</h3>
+                <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input placeholder="Titel *" value={newEvent.title} onChange={(e) => setNewEvent(p => ({ ...p, title: e.target.value }))} className="bg-secondary border-border" required />
+                  <Input placeholder="Plats" value={newEvent.location} onChange={(e) => setNewEvent(p => ({ ...p, location: e.target.value }))} className="bg-secondary border-border" />
+                  <Input type="datetime-local" value={newEvent.event_date} onChange={(e) => setNewEvent(p => ({ ...p, event_date: e.target.value }))} className="bg-secondary border-border" required />
+                  <Input type="number" placeholder="Max deltagare" value={newEvent.max_participants} onChange={(e) => setNewEvent(p => ({ ...p, max_participants: e.target.value }))} className="bg-secondary border-border" />
+                  <Textarea placeholder="Beskrivning" value={newEvent.description} onChange={(e) => setNewEvent(p => ({ ...p, description: e.target.value }))} className="bg-secondary border-border md:col-span-2" />
+                  <div className="md:col-span-2">
+                    <RouteEditor points={routePoints} onChange={setRoutePoints} />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(event.event_date), "d MMMM yyyy HH:mm", { locale: sv })}
-                    {event.location && ` · ${event.location}`}
-                  </p>
-                  {event.description && <p className="text-sm text-cream-muted mt-2">{event.description}</p>}
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSelectedEventId(selectedEventId === event.id ? null : event.id)}
-                    title="Visa anmälningar"
-                  >
-                    <Users className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => togglePublish.mutate({ id: event.id, published: event.is_published })}
-                    title={event.is_published ? "Avpublicera" : "Publicera"}
-                  >
-                    {event.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteEvent.mutate(event.id)}
-                    className="text-destructive hover:text-destructive"
-                    title="Ta bort"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                  <div className="md:col-span-2 flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                      <input type="checkbox" checked={newEvent.is_published} onChange={(e) => setNewEvent(p => ({ ...p, is_published: e.target.checked }))} className="accent-primary" />
+                      Publicera direkt
+                    </label>
+                    <Button type="submit" variant="hero" disabled={createMutation.isPending}>
+                      {createMutation.isPending ? "Skapar..." : "Skapa event"}
+                    </Button>
+                  </div>
+                </form>
               </div>
+            )}
 
-              {/* Registrations */}
-              {selectedEventId === event.id && registrations && (
-                <div className="mt-6 border-t border-border pt-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-3">
-                    Anmälningar ({registrations.length})
-                  </h4>
-                  {registrations.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Inga anmälningar ännu.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {registrations.map((reg) => (
-                        <div key={reg.id} className="bg-secondary/50 rounded p-3 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-foreground font-medium">{reg.name}</span>
-                            <span className="text-muted-foreground">{format(new Date(reg.created_at), "d MMM yyyy", { locale: sv })}</span>
-                          </div>
-                          <p className="text-muted-foreground">{reg.email}{reg.phone && ` · ${reg.phone}`}</p>
-                          {reg.message && <p className="text-cream-muted mt-1">{reg.message}</p>}
+            {/* Events list */}
+            <div className="space-y-4">
+              {events?.map((event) => {
+                const isExpanded = expandedEventId === event.id;
+                const isEditing = editingEventId === event.id;
+                const eventRoutePoints = Array.isArray(event.route_points) ? event.route_points as unknown as RoutePoint[] : [];
+
+                return (
+                  <div key={event.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                    {/* Clickable header */}
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(event.id)}
+                      className="w-full text-left p-6 flex items-center justify-between gap-4 hover:bg-secondary/30 transition-colors"
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-display text-xl text-foreground truncate">{event.title}</h3>
+                          <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${event.is_published ? "bg-green-900/50 text-green-400" : "bg-muted text-muted-foreground"}`}>
+                            {event.is_published ? "Publicerad" : "Utkast"}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(event.event_date), "d MMMM yyyy HH:mm", { locale: sv })}
+                          {event.location && ` · ${event.location}`}
+                          {event.max_participants && ` · Max ${event.max_participants} deltagare`}
+                        </p>
+                      </div>
+                      {isExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground shrink-0" /> : <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />}
+                    </button>
+
+                    {/* Expanded content */}
+                    {isExpanded && (
+                      <div className="border-t border-border">
+                        {/* Action bar */}
+                        <div className="flex gap-2 px-6 py-3 bg-secondary/20 border-b border-border">
+                          {!isEditing ? (
+                            <Button variant="ghost" size="sm" onClick={() => startEditing(event)}>
+                              <Pencil className="h-4 w-4 mr-1" /> Redigera
+                            </Button>
+                          ) : (
+                            <>
+                              <Button variant="hero" size="sm" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+                                <Save className="h-4 w-4 mr-1" /> {updateMutation.isPending ? "Sparar..." : "Spara"}
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={cancelEditing}>
+                                <X className="h-4 w-4 mr-1" /> Avbryt
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            variant="ghost" size="sm"
+                            onClick={() => togglePublish.mutate({ id: event.id, published: event.is_published })}
+                          >
+                            {event.is_published ? <><EyeOff className="h-4 w-4 mr-1" /> Avpublicera</> : <><Eye className="h-4 w-4 mr-1" /> Publicera</>}
+                          </Button>
+                          <Button
+                            variant="ghost" size="sm"
+                            onClick={() => { if (confirm("Vill du verkligen ta bort detta event?")) deleteEvent.mutate(event.id); }}
+                            className="text-destructive hover:text-destructive ml-auto"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Ta bort
+                          </Button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                          {/* Edit form or details */}
+                          {isEditing && editForm ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-1 block">Titel</label>
+                                <Input value={editForm.title} onChange={(e) => setEditForm((p: any) => ({ ...p, title: e.target.value }))} className="bg-secondary border-border" />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-1 block">Plats</label>
+                                <Input value={editForm.location} onChange={(e) => setEditForm((p: any) => ({ ...p, location: e.target.value }))} className="bg-secondary border-border" />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-1 block">Datum & tid</label>
+                                <Input type="datetime-local" value={editForm.event_date} onChange={(e) => setEditForm((p: any) => ({ ...p, event_date: e.target.value }))} className="bg-secondary border-border" />
+                              </div>
+                              <div>
+                                <label className="text-xs text-muted-foreground mb-1 block">Max deltagare</label>
+                                <Input type="number" value={editForm.max_participants} onChange={(e) => setEditForm((p: any) => ({ ...p, max_participants: e.target.value }))} className="bg-secondary border-border" />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="text-xs text-muted-foreground mb-1 block">Beskrivning</label>
+                                <Textarea value={editForm.description} onChange={(e) => setEditForm((p: any) => ({ ...p, description: e.target.value }))} className="bg-secondary border-border" />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                                  <input type="checkbox" checked={editForm.is_published} onChange={(e) => setEditForm((p: any) => ({ ...p, is_published: e.target.checked }))} className="accent-primary" />
+                                  Publicerad
+                                </label>
+                              </div>
+                              <div className="md:col-span-2">
+                                <RouteEditor points={editRoutePoints} onChange={setEditRoutePoints} />
+                              </div>
+                              {editRoutePoints.length > 0 && (
+                                <div className="md:col-span-2">
+                                  <RouteMap points={editRoutePoints} />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {event.description && (
+                                <div>
+                                  <h4 className="text-xs font-medium text-muted-foreground mb-1">Beskrivning</h4>
+                                  <p className="text-sm text-foreground">{event.description}</p>
+                                </div>
+                              )}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                  <h4 className="text-xs font-medium text-muted-foreground mb-1">Datum</h4>
+                                  <p className="text-sm text-foreground">{format(new Date(event.event_date), "d MMMM yyyy HH:mm", { locale: sv })}</p>
+                                </div>
+                                {event.location && (
+                                  <div>
+                                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Plats</h4>
+                                    <p className="text-sm text-foreground">{event.location}</p>
+                                  </div>
+                                )}
+                                {event.max_participants && (
+                                  <div>
+                                    <h4 className="text-xs font-medium text-muted-foreground mb-1">Max deltagare</h4>
+                                    <p className="text-sm text-foreground">{event.max_participants}</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Route Map */}
+                              {eventRoutePoints.length > 0 && (
+                                <div>
+                                  <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" /> Rutt ({eventRoutePoints.length} punkter)
+                                  </h4>
+                                  <RouteMap points={eventRoutePoints} />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Registrations */}
+                          <div className="border-t border-border pt-4">
+                            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                              <Users className="h-4 w-4" /> Anmälningar ({registrations?.length || 0})
+                            </h4>
+                            {!registrations || registrations.length === 0 ? (
+                              <p className="text-sm text-muted-foreground">Inga anmälningar ännu.</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {registrations.map((reg) => (
+                                  <div key={reg.id} className="bg-secondary/50 rounded p-3 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="text-foreground font-medium">{reg.name}</span>
+                                      <span className="text-muted-foreground">{format(new Date(reg.created_at), "d MMM yyyy", { locale: sv })}</span>
+                                    </div>
+                                    <p className="text-muted-foreground">{reg.email}{reg.phone && ` · ${reg.phone}`}</p>
+                                    {reg.message && <p className="text-foreground/70 mt-1">{reg.message}</p>}
+                                  </div>
+                                )))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {(!events || events.length === 0) && (
+                <p className="text-center text-muted-foreground py-12">Inga events ännu. Skapa ditt första event!</p>
               )}
             </div>
-          ))}
-
-          {(!events || events.length === 0) && (
-            <p className="text-center text-muted-foreground py-12">Inga events ännu. Skapa ditt första event!</p>
-          )}
-        </div>
-        </>
+          </>
         )}
 
         {activeTab === "newsletter" && (
@@ -458,7 +552,7 @@ const Admin = () => {
                     <div className="space-y-1">
                       <p className="text-foreground font-medium">{lead.name}</p>
                       <p className="text-sm text-muted-foreground">{lead.email}{lead.phone && ` · ${lead.phone}`}</p>
-                      {lead.message && <p className="text-cream-muted text-sm mt-2">{lead.message}</p>}
+                      {lead.message && <p className="text-foreground/70 text-sm mt-2">{lead.message}</p>}
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0">
                       {format(new Date(lead.created_at), "d MMM yyyy", { locale: sv })}
