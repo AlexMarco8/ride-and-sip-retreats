@@ -148,7 +148,9 @@ export type Database = {
           name: string
           order_index: number
           price_per_person: number | null
+          quantity: number
           type: string
+          unit_cost: number | null
         }
         Insert: {
           booking_reference?: string | null
@@ -164,7 +166,9 @@ export type Database = {
           name: string
           order_index?: number
           price_per_person?: number | null
+          quantity?: number
           type?: string
+          unit_cost?: number | null
         }
         Update: {
           booking_reference?: string | null
@@ -180,7 +184,9 @@ export type Database = {
           name?: string
           order_index?: number
           price_per_person?: number | null
+          quantity?: number
           type?: string
+          unit_cost?: number | null
         }
         Relationships: [
           {
