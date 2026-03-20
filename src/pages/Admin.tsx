@@ -369,6 +369,23 @@ const Admin = () => {
                   <Input type="number" placeholder="Max deltagare" value={newEvent.max_participants} onChange={(e) => setNewEvent(p => ({ ...p, max_participants: e.target.value }))} className="bg-secondary border-border" />
                   <Textarea placeholder="Beskrivning" value={newEvent.description} onChange={(e) => setNewEvent(p => ({ ...p, description: e.target.value }))} className="bg-secondary border-border md:col-span-2" />
                   <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Eventbild</label>
+                    <input ref={createImageRef} type="file" accept="image/*" onChange={handleCreateImageChange} className="hidden" />
+                    <div className="flex items-center gap-4">
+                      <Button type="button" variant="outline" size="sm" onClick={() => createImageRef.current?.click()} disabled={uploadingImage}>
+                        {uploadingImage ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Laddar upp...</> : <><ImagePlus className="h-4 w-4 mr-1" /> Välj bild</>}
+                      </Button>
+                      {newEventImageUrl && (
+                        <div className="relative">
+                          <img src={newEventImageUrl} alt="Preview" className="h-16 w-24 object-cover rounded border border-border" />
+                          <button type="button" onClick={() => setNewEventImageUrl(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
                     <RouteEditor points={routePoints} onChange={setRoutePoints} />
                   </div>
                   <div className="md:col-span-2 flex items-center justify-between">
