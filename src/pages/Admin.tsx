@@ -502,7 +502,7 @@ const Admin = () => {
                                     <p className="text-muted-foreground">{reg.email}{reg.phone && ` · ${reg.phone}`}</p>
                                     {reg.message && <p className="text-foreground/70 mt-1">{reg.message}</p>}
                                   </div>
-                                )))}
+                                ))}
                               </div>
                             )}
                           </div>
