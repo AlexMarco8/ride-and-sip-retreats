@@ -201,6 +201,7 @@ const Admin = () => {
         max_participants: editForm.max_participants ? parseInt(editForm.max_participants) : null,
         is_published: editForm.is_published,
         route_points: editRoutePoints.length > 0 ? JSON.parse(JSON.stringify(editRoutePoints)) : [],
+        image_url: editImageUrl,
       }).eq("id", editingEventId);
       if (error) throw error;
     },
@@ -209,6 +210,7 @@ const Admin = () => {
       toast({ title: "Event uppdaterat!" });
       setEditingEventId(null);
       setEditForm(null);
+      setEditImageUrl(null);
     },
     onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
   });
