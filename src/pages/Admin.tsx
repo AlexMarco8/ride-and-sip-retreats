@@ -174,7 +174,8 @@ const Admin = () => {
         event_date: new Date(newEvent.event_date).toISOString(),
         max_participants: newEvent.max_participants ? parseInt(newEvent.max_participants) : null,
         is_published: newEvent.is_published,
-        route_points: routePoints.length > 0 ? routePoints : [],
+        route_points: routePoints && routePoints.length > 0 ? routePoints : [],
+        image_url: newEventImageUrl,
       } as any);
       if (error) throw error;
     },
@@ -184,6 +185,7 @@ const Admin = () => {
       setShowCreate(false);
       setNewEvent({ title: "", description: "", location: "", event_date: "", max_participants: "", is_published: false });
       setRoutePoints([]);
+      setNewEventImageUrl(null);
     },
     onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
   });
