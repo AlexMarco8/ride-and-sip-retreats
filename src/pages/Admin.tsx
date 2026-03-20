@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck } from "lucide-react";
+import RouteEditor, { type RoutePoint } from "@/components/RouteEditor";
 import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
