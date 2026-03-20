@@ -515,7 +515,7 @@ const Admin = () => {
                   {/* Journey Stops */}
                   <div>
                     <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Resplan & stopp</h4>
-                    <JourneyStopsEditor stops={journeyStops} onChange={setJourneyStops} />
+                    <JourneyStopsEditor stops={journeyStops} onChange={setJourneyStops} participants={parseInt(newEvent.max_participants) || 1} marginPercent={marginPercent} onMarginChange={setMarginPercent} />
                   </div>
 
                   {/* Route */}
