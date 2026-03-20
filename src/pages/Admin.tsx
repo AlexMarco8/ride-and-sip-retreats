@@ -491,6 +491,23 @@ const Admin = () => {
                                 <Textarea value={editForm.description} onChange={(e) => setEditForm((p: any) => ({ ...p, description: e.target.value }))} className="bg-secondary border-border" />
                               </div>
                               <div className="md:col-span-2">
+                                <label className="text-xs text-muted-foreground mb-1 block">Eventbild</label>
+                                <input ref={editImageRef} type="file" accept="image/*" onChange={handleEditImageChange} className="hidden" />
+                                <div className="flex items-center gap-4">
+                                  <Button type="button" variant="outline" size="sm" onClick={() => editImageRef.current?.click()} disabled={editUploadingImage}>
+                                    {editUploadingImage ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Laddar upp...</> : <><ImagePlus className="h-4 w-4 mr-1" /> Byt bild</>}
+                                  </Button>
+                                  {editImageUrl && (
+                                    <div className="relative">
+                                      <img src={editImageUrl} alt="Preview" className="h-16 w-24 object-cover rounded border border-border" />
+                                      <button type="button" onClick={() => setEditImageUrl(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="md:col-span-2">
                                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                                   <input type="checkbox" checked={editForm.is_published} onChange={(e) => setEditForm((p: any) => ({ ...p, is_published: e.target.checked }))} className="accent-primary" />
                                   Publicerad
