@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
-import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck } from "lucide-react";
+import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck, ChevronDown, ChevronUp, Pencil, Save, X, MapPin } from "lucide-react";
 import RouteEditor, { type RoutePoint } from "@/components/RouteEditor";
+import RouteMap from "@/components/RouteMap";
 import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
@@ -22,7 +23,10 @@ const Admin = () => {
   const [loginPassword, setLoginPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>(null);
+  const [editRoutePoints, setEditRoutePoints] = useState<RoutePoint[]>([]);
   const [activeTab, setActiveTab] = useState<"events" | "newsletter" | "interest">("events");
 
   const [newEvent, setNewEvent] = useState({
