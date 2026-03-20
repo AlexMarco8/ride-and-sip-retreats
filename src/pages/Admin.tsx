@@ -658,7 +658,7 @@ const Admin = () => {
                               {/* Journey Stops */}
                               <div>
                                 <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Resplan & stopp</h4>
-                                <JourneyStopsEditor stops={editJourneyStops} onChange={setEditJourneyStops} />
+                                <JourneyStopsEditor stops={editJourneyStops} onChange={setEditJourneyStops} participants={parseInt(editForm.max_participants) || 1} marginPercent={editMarginPercent} onMarginChange={setEditMarginPercent} />
                               </div>
 
                               {/* Route */}
