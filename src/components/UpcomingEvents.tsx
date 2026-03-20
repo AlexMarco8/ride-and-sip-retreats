@@ -111,6 +111,11 @@ const UpcomingEvents = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Route Map */}
+                  {event.route_points && Array.isArray(event.route_points) && (event.route_points as any[]).length > 0 && (
+                    <RouteMap points={event.route_points as any} className="mt-4" />
+                  )}
                 </div>
 
                 <Dialog open={selectedEvent === event.id} onOpenChange={(open) => setSelectedEvent(open ? event.id : null)}>
