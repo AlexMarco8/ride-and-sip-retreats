@@ -247,11 +247,13 @@ const Admin = () => {
     });
     const pts = Array.isArray(event.route_points) ? event.route_points as RoutePoint[] : [];
     setEditRoutePoints(pts);
+    setEditImageUrl(event.image_url || null);
   };
 
   const cancelEditing = () => {
     setEditingEventId(null);
     setEditForm(null);
+    setEditImageUrl(null);
   };
 
   const toggleExpand = (eventId: string) => {
