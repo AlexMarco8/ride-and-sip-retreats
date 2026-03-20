@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck } from "lucide-react";
+import RouteEditor, { type RoutePoint } from "@/components/RouteEditor";
 import { Link } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
@@ -32,6 +33,7 @@ const Admin = () => {
     max_participants: "",
     is_published: false,
   });
+  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -129,7 +131,8 @@ const Admin = () => {
         event_date: new Date(newEvent.event_date).toISOString(),
         max_participants: newEvent.max_participants ? parseInt(newEvent.max_participants) : null,
         is_published: newEvent.is_published,
-      });
+        route_points: routePoints.length > 0 ? routePoints : [],
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -137,6 +140,7 @@ const Admin = () => {
       toast({ title: "Event skapat!" });
       setShowCreate(false);
       setNewEvent({ title: "", description: "", location: "", event_date: "", max_participants: "", is_published: false });
+      setRoutePoints([]);
     },
     onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
   });
@@ -316,6 +320,9 @@ const Admin = () => {
                 onChange={(e) => setNewEvent(p => ({ ...p, description: e.target.value }))}
                 className="bg-secondary border-border md:col-span-2"
               />
+              <div className="md:col-span-2">
+                <RouteEditor points={routePoints} onChange={setRoutePoints} />
+              </div>
               <div className="md:col-span-2 flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                   <input

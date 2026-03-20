@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, MapPin, Users, Clock } from "lucide-react";
 import { format } from "date-fns";
+import RouteMap from "@/components/RouteMap";
 import { sv } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -110,6 +111,11 @@ const UpcomingEvents = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Route Map */}
+                  {event.route_points && Array.isArray(event.route_points) && (event.route_points as any[]).length > 0 && (
+                    <RouteMap points={event.route_points as any} className="mt-4" />
+                  )}
                 </div>
 
                 <Dialog open={selectedEvent === event.id} onOpenChange={(open) => setSelectedEvent(open ? event.id : null)}>
