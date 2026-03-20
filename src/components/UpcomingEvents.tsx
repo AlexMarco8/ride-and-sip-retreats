@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, MapPin, Users, Clock } from "lucide-react";
 import { format } from "date-fns";
+import RouteMap from "@/components/RouteMap";
 import { sv } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import {
