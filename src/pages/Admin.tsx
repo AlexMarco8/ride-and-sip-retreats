@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
-import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck, ChevronDown, ChevronUp, Pencil, Save, X, MapPin } from "lucide-react";
+import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck, ChevronDown, ChevronUp, Pencil, Save, X, MapPin, ImagePlus, Loader2 } from "lucide-react";
 import RouteEditor, { type RoutePoint } from "@/components/RouteEditor";
 import RouteMap from "@/components/RouteMap";
 import { Link } from "react-router-dom";
