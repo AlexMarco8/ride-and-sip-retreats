@@ -169,7 +169,6 @@ const Admin = () => {
 
   // Save journey stops helper
   const saveJourneyStops = async (eventId: string, stops: JourneyStop[]) => {
-    // Delete existing stops
     await supabase.from("journey_stops").delete().eq("event_id", eventId);
     if (stops.length > 0) {
       const rows = stops.map((s, i) => ({
@@ -182,6 +181,8 @@ const Admin = () => {
         order_index: i,
         is_public: s.is_public,
         price_per_person: s.price_per_person || null,
+        quantity: s.quantity || 1,
+        unit_cost: s.unit_cost ?? null,
         booking_reference: s.booking_reference || null,
         contact_info: s.contact_info || null,
         internal_notes: s.internal_notes || null,
