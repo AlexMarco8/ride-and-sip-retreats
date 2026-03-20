@@ -44,6 +44,8 @@ const Admin = () => {
   });
   const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
   const [journeyStops, setJourneyStops] = useState<JourneyStop[]>([]);
+  const [marginPercent, setMarginPercent] = useState(20);
+  const [editMarginPercent, setEditMarginPercent] = useState(20);
 
   const uploadImage = async (file: File, setLoading: (v: boolean) => void): Promise<string | null> => {
     setLoading(true);
@@ -167,7 +169,6 @@ const Admin = () => {
 
   // Save journey stops helper
   const saveJourneyStops = async (eventId: string, stops: JourneyStop[]) => {
-    // Delete existing stops
     await supabase.from("journey_stops").delete().eq("event_id", eventId);
     if (stops.length > 0) {
       const rows = stops.map((s, i) => ({
@@ -180,6 +181,8 @@ const Admin = () => {
         order_index: i,
         is_public: s.is_public,
         price_per_person: s.price_per_person || null,
+        quantity: s.quantity || 1,
+        unit_cost: s.unit_cost ?? null,
         booking_reference: s.booking_reference || null,
         contact_info: s.contact_info || null,
         internal_notes: s.internal_notes || null,
@@ -299,7 +302,9 @@ const Admin = () => {
       lng: s.lng || undefined,
       order_index: s.order_index,
       is_public: s.is_public,
-      price_per_person: s.price_per_person || undefined,
+      price_per_person: s.price_per_person ? Number(s.price_per_person) : undefined,
+      quantity: s.quantity || 1,
+      unit_cost: s.unit_cost ? Number(s.unit_cost) : undefined,
       booking_reference: s.booking_reference || undefined,
       contact_info: s.contact_info || undefined,
       internal_notes: s.internal_notes || undefined,
@@ -512,7 +517,7 @@ const Admin = () => {
                   {/* Journey Stops */}
                   <div>
                     <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Resplan & stopp</h4>
-                    <JourneyStopsEditor stops={journeyStops} onChange={setJourneyStops} />
+                    <JourneyStopsEditor stops={journeyStops} onChange={setJourneyStops} participants={parseInt(newEvent.max_participants) || 1} marginPercent={marginPercent} onMarginChange={setMarginPercent} />
                   </div>
 
                   {/* Route */}
@@ -655,7 +660,7 @@ const Admin = () => {
                               {/* Journey Stops */}
                               <div>
                                 <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Resplan & stopp</h4>
-                                <JourneyStopsEditor stops={editJourneyStops} onChange={setEditJourneyStops} />
+                                <JourneyStopsEditor stops={editJourneyStops} onChange={setEditJourneyStops} participants={parseInt(editForm.max_participants) || 1} marginPercent={editMarginPercent} onMarginChange={setEditMarginPercent} />
                               </div>
 
                               {/* Route */}
