@@ -44,6 +44,8 @@ const Admin = () => {
   });
   const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
   const [journeyStops, setJourneyStops] = useState<JourneyStop[]>([]);
+  const [marginPercent, setMarginPercent] = useState(20);
+  const [editMarginPercent, setEditMarginPercent] = useState(20);
 
   const uploadImage = async (file: File, setLoading: (v: boolean) => void): Promise<string | null> => {
     setLoading(true);
