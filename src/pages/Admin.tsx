@@ -320,6 +320,9 @@ const Admin = () => {
                 onChange={(e) => setNewEvent(p => ({ ...p, description: e.target.value }))}
                 className="bg-secondary border-border md:col-span-2"
               />
+              <div className="md:col-span-2">
+                <RouteEditor points={routePoints} onChange={setRoutePoints} />
+              </div>
               <div className="md:col-span-2 flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                   <input
