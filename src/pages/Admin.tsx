@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
-import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck, ChevronDown, ChevronUp, Pencil, Save, X, MapPin } from "lucide-react";
+import { LogOut, Plus, Trash2, Eye, EyeOff, Users, ArrowLeft, Mail, UserCheck, ChevronDown, ChevronUp, Pencil, Save, X, MapPin, ImagePlus, Loader2 } from "lucide-react";
 import RouteEditor, { type RoutePoint } from "@/components/RouteEditor";
 import RouteMap from "@/components/RouteMap";
 import { Link } from "react-router-dom";
@@ -28,6 +28,12 @@ const Admin = () => {
   const [editForm, setEditForm] = useState<any>(null);
   const [editRoutePoints, setEditRoutePoints] = useState<RoutePoint[]>([]);
   const [activeTab, setActiveTab] = useState<"events" | "newsletter" | "interest">("events");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [editUploadingImage, setEditUploadingImage] = useState(false);
+  const [newEventImageUrl, setNewEventImageUrl] = useState<string | null>(null);
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
+  const createImageRef = useRef<HTMLInputElement>(null);
+  const editImageRef = useRef<HTMLInputElement>(null);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -37,7 +43,38 @@ const Admin = () => {
     max_participants: "",
     is_published: false,
   });
-  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
+  const [routePoints, setRoutePoints] = useState<RoutePoint[]>();
+
+  const uploadImage = async (file: File, setLoading: (v: boolean) => void): Promise<string | null> => {
+    setLoading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("event-images").upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("event-images").getPublicUrl(path);
+      return publicUrl;
+    } catch (err: any) {
+      toast({ title: "Bilduppladdning misslyckades", description: err.message, variant: "destructive" });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, setUploadingImage);
+    if (url) setNewEventImageUrl(url);
+  };
+
+  const handleEditImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, setEditUploadingImage);
+    if (url) setEditImageUrl(url);
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -137,7 +174,8 @@ const Admin = () => {
         event_date: new Date(newEvent.event_date).toISOString(),
         max_participants: newEvent.max_participants ? parseInt(newEvent.max_participants) : null,
         is_published: newEvent.is_published,
-        route_points: routePoints.length > 0 ? routePoints : [],
+        route_points: routePoints && routePoints.length > 0 ? routePoints : [],
+        image_url: newEventImageUrl,
       } as any);
       if (error) throw error;
     },
@@ -147,6 +185,7 @@ const Admin = () => {
       setShowCreate(false);
       setNewEvent({ title: "", description: "", location: "", event_date: "", max_participants: "", is_published: false });
       setRoutePoints([]);
+      setNewEventImageUrl(null);
     },
     onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
   });
@@ -162,6 +201,7 @@ const Admin = () => {
         max_participants: editForm.max_participants ? parseInt(editForm.max_participants) : null,
         is_published: editForm.is_published,
         route_points: editRoutePoints.length > 0 ? JSON.parse(JSON.stringify(editRoutePoints)) : [],
+        image_url: editImageUrl,
       }).eq("id", editingEventId);
       if (error) throw error;
     },
@@ -170,6 +210,7 @@ const Admin = () => {
       toast({ title: "Event uppdaterat!" });
       setEditingEventId(null);
       setEditForm(null);
+      setEditImageUrl(null);
     },
     onError: (err: any) => toast({ title: "Fel", description: err.message, variant: "destructive" }),
   });
@@ -206,11 +247,13 @@ const Admin = () => {
     });
     const pts = Array.isArray(event.route_points) ? event.route_points as RoutePoint[] : [];
     setEditRoutePoints(pts);
+    setEditImageUrl(event.image_url || null);
   };
 
   const cancelEditing = () => {
     setEditingEventId(null);
     setEditForm(null);
+    setEditImageUrl(null);
   };
 
   const toggleExpand = (eventId: string) => {
@@ -326,6 +369,23 @@ const Admin = () => {
                   <Input type="number" placeholder="Max deltagare" value={newEvent.max_participants} onChange={(e) => setNewEvent(p => ({ ...p, max_participants: e.target.value }))} className="bg-secondary border-border" />
                   <Textarea placeholder="Beskrivning" value={newEvent.description} onChange={(e) => setNewEvent(p => ({ ...p, description: e.target.value }))} className="bg-secondary border-border md:col-span-2" />
                   <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Eventbild</label>
+                    <input ref={createImageRef} type="file" accept="image/*" onChange={handleCreateImageChange} className="hidden" />
+                    <div className="flex items-center gap-4">
+                      <Button type="button" variant="outline" size="sm" onClick={() => createImageRef.current?.click()} disabled={uploadingImage}>
+                        {uploadingImage ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Laddar upp...</> : <><ImagePlus className="h-4 w-4 mr-1" /> Välj bild</>}
+                      </Button>
+                      {newEventImageUrl && (
+                        <div className="relative">
+                          <img src={newEventImageUrl} alt="Preview" className="h-16 w-24 object-cover rounded border border-border" />
+                          <button type="button" onClick={() => setNewEventImageUrl(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
                     <RouteEditor points={routePoints} onChange={setRoutePoints} />
                   </div>
                   <div className="md:col-span-2 flex items-center justify-between">
@@ -431,6 +491,23 @@ const Admin = () => {
                                 <Textarea value={editForm.description} onChange={(e) => setEditForm((p: any) => ({ ...p, description: e.target.value }))} className="bg-secondary border-border" />
                               </div>
                               <div className="md:col-span-2">
+                                <label className="text-xs text-muted-foreground mb-1 block">Eventbild</label>
+                                <input ref={editImageRef} type="file" accept="image/*" onChange={handleEditImageChange} className="hidden" />
+                                <div className="flex items-center gap-4">
+                                  <Button type="button" variant="outline" size="sm" onClick={() => editImageRef.current?.click()} disabled={editUploadingImage}>
+                                    {editUploadingImage ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Laddar upp...</> : <><ImagePlus className="h-4 w-4 mr-1" /> Byt bild</>}
+                                  </Button>
+                                  {editImageUrl && (
+                                    <div className="relative">
+                                      <img src={editImageUrl} alt="Preview" className="h-16 w-24 object-cover rounded border border-border" />
+                                      <button type="button" onClick={() => setEditImageUrl(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="md:col-span-2">
                                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                                   <input type="checkbox" checked={editForm.is_published} onChange={(e) => setEditForm((p: any) => ({ ...p, is_published: e.target.checked }))} className="accent-primary" />
                                   Publicerad
@@ -447,6 +524,9 @@ const Admin = () => {
                             </div>
                           ) : (
                             <div className="space-y-4">
+                              {event.image_url && (
+                                <img src={event.image_url} alt={event.title} className="w-full max-h-64 object-cover rounded-lg border border-border" />
+                              )}
                               {event.description && (
                                 <div>
                                   <h4 className="text-xs font-medium text-muted-foreground mb-1">Beskrivning</h4>

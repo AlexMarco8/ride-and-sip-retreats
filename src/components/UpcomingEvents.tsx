@@ -124,6 +124,10 @@ const UpcomingEvents = () => {
                         )}
                       </div>
 
+                      {event.image_url && (
+                        <img src={event.image_url} alt={event.title} className="w-full max-h-72 object-cover rounded-lg" />
+                      )}
+
                       {event.description && (
                         <p className="text-foreground/80 font-body leading-relaxed max-w-2xl">
                           {event.description}
