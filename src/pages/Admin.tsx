@@ -28,6 +28,12 @@ const Admin = () => {
   const [editForm, setEditForm] = useState<any>(null);
   const [editRoutePoints, setEditRoutePoints] = useState<RoutePoint[]>([]);
   const [activeTab, setActiveTab] = useState<"events" | "newsletter" | "interest">("events");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [editUploadingImage, setEditUploadingImage] = useState(false);
+  const [newEventImageUrl, setNewEventImageUrl] = useState<string | null>(null);
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
+  const createImageRef = useRef<HTMLInputElement>(null);
+  const editImageRef = useRef<HTMLInputElement>(null);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -37,7 +43,38 @@ const Admin = () => {
     max_participants: "",
     is_published: false,
   });
-  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
+  const [routePoints, setRoutePoints] = useState<RoutePoint[]>();
+
+  const uploadImage = async (file: File, setLoading: (v: boolean) => void): Promise<string | null> => {
+    setLoading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("event-images").upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("event-images").getPublicUrl(path);
+      return publicUrl;
+    } catch (err: any) {
+      toast({ title: "Bilduppladdning misslyckades", description: err.message, variant: "destructive" });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, setUploadingImage);
+    if (url) setNewEventImageUrl(url);
+  };
+
+  const handleEditImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file, setEditUploadingImage);
+    if (url) setEditImageUrl(url);
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
