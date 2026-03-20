@@ -524,6 +524,9 @@ const Admin = () => {
                             </div>
                           ) : (
                             <div className="space-y-4">
+                              {event.image_url && (
+                                <img src={event.image_url} alt={event.title} className="w-full max-h-64 object-cover rounded-lg border border-border" />
+                              )}
                               {event.description && (
                                 <div>
                                   <h4 className="text-xs font-medium text-muted-foreground mb-1">Beskrivning</h4>
