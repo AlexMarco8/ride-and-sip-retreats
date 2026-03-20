@@ -161,7 +161,7 @@ const Admin = () => {
         event_date: new Date(editForm.event_date).toISOString(),
         max_participants: editForm.max_participants ? parseInt(editForm.max_participants) : null,
         is_published: editForm.is_published,
-        route_points: editRoutePoints.length > 0 ? editRoutePoints : [],
+        route_points: editRoutePoints.length > 0 ? JSON.parse(JSON.stringify(editRoutePoints)) : [],
       }).eq("id", editingEventId);
       if (error) throw error;
     },
