@@ -4,23 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { Calendar, MapPin, ChevronRight, X } from "lucide-react";
 import { format } from "date-fns";
 import RouteMap from "@/components/RouteMap";
 import { sv } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 const UpcomingEvents = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+  const [showRegister, setShowRegister] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
 
   const { data: events, isLoading } = useQuery({
@@ -46,7 +40,7 @@ const UpcomingEvents = () => {
     },
     onSuccess: () => {
       toast({ title: "Anmälan mottagen!", description: "Vi återkommer med mer information." });
-      setSelectedEvent(null);
+      setShowRegister(null);
       setFormData({ name: "", email: "", phone: "", message: "" });
     },
     onError: () => {
@@ -75,98 +69,107 @@ const UpcomingEvents = () => {
           </p>
         </div>
 
-        <div className="grid gap-8 max-w-4xl mx-auto">
-          {events.map((event) => (
-            <div
-              key={event.id}
-              className="bg-card border border-border rounded-lg p-8 hover:border-primary/30 transition-colors"
-            >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div className="space-y-3">
-                  <h3 className="font-display text-2xl md:text-3xl font-semibold text-foreground">
-                    {event.title}
-                  </h3>
-                  {event.description && (
-                    <p className="text-cream-muted font-body max-w-lg">{event.description}</p>
-                  )}
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4 text-primary" />
+        <div className="grid gap-6 max-w-4xl mx-auto">
+          {events.map((event) => {
+            const isExpanded = expandedEvent === event.id;
+            const hasRoute = event.route_points && Array.isArray(event.route_points) && (event.route_points as any[]).length > 0;
+
+            return (
+              <div
+                key={event.id}
+                className="bg-card border border-border rounded-xl overflow-hidden transition-all duration-500"
+              >
+                {/* Compact card — always visible */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpandedEvent(isExpanded ? null : event.id);
+                    setShowRegister(null);
+                  }}
+                  className="w-full text-left p-8 flex items-center justify-between gap-6 group hover:bg-secondary/20 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium tracking-widest uppercase text-primary mb-2">
                       {format(new Date(event.event_date), "d MMMM yyyy", { locale: sv })}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-primary" />
-                      {format(new Date(event.event_date), "HH:mm")}
-                    </span>
+                    </p>
+                    <h3 className="font-display text-2xl md:text-3xl font-semibold text-foreground truncate">
+                      {event.title}
+                    </h3>
                     {event.location && (
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4 text-primary" />
+                      <p className="text-sm text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" />
                         {event.location}
-                      </span>
-                    )}
-                    {event.max_participants && (
-                      <span className="flex items-center gap-1.5">
-                        <Users className="h-4 w-4 text-primary" />
-                        Max {event.max_participants} deltagare
-                      </span>
+                      </p>
                     )}
                   </div>
+                  <ChevronRight
+                    className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform duration-300 ${isExpanded ? "rotate-90" : "group-hover:translate-x-1"}`}
+                  />
+                </button>
 
-                  {/* Route Map */}
-                  {event.route_points && Array.isArray(event.route_points) && (event.route_points as any[]).length > 0 && (
-                    <RouteMap points={event.route_points as any} className="mt-4" />
-                  )}
-                </div>
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="border-t border-border animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="p-8 space-y-6">
+                      {/* Details row */}
+                      <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          {format(new Date(event.event_date), "EEEE d MMMM yyyy, HH:mm", { locale: sv })}
+                        </span>
+                        {event.max_participants && (
+                          <span className="text-muted-foreground">
+                            Max {event.max_participants} deltagare
+                          </span>
+                        )}
+                      </div>
 
-                <Dialog open={selectedEvent === event.id} onOpenChange={(open) => setSelectedEvent(open ? event.id : null)}>
-                  <DialogTrigger asChild>
-                    <Button variant="hero" size="lg" className="shrink-0">
-                      Anmäl dig
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-card border-border">
-                    <DialogHeader>
-                      <DialogTitle className="font-display text-2xl text-foreground">
-                        Anmälan: {event.title}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={(e) => handleSubmit(e, event.id)} className="space-y-4 mt-4">
-                      <Input
-                        placeholder="Namn *"
-                        value={formData.name}
-                        onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-                        required
-                        className="bg-secondary border-border"
-                      />
-                      <Input
-                        type="email"
-                        placeholder="E-post *"
-                        value={formData.email}
-                        onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
-                        required
-                        className="bg-secondary border-border"
-                      />
-                      <Input
-                        placeholder="Telefon"
-                        value={formData.phone}
-                        onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
-                        className="bg-secondary border-border"
-                      />
-                      <Textarea
-                        placeholder="Meddelande"
-                        value={formData.message}
-                        onChange={(e) => setFormData(p => ({ ...p, message: e.target.value }))}
-                        className="bg-secondary border-border"
-                      />
-                      <Button type="submit" variant="hero" className="w-full" disabled={registerMutation.isPending}>
-                        {registerMutation.isPending ? "Skickar..." : "Skicka anmälan"}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                      {event.description && (
+                        <p className="text-foreground/80 font-body leading-relaxed max-w-2xl">
+                          {event.description}
+                        </p>
+                      )}
+
+                      {/* Route Map */}
+                      {hasRoute && (
+                        <div>
+                          <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Rutt</h4>
+                          <RouteMap points={event.route_points as any} />
+                        </div>
+                      )}
+
+                      {/* Register section */}
+                      {showRegister === event.id ? (
+                        <div className="bg-secondary/30 rounded-lg p-6 border border-border">
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-display text-lg text-foreground">Anmälan</h4>
+                            <button type="button" onClick={() => setShowRegister(null)} className="text-muted-foreground hover:text-foreground">
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <form onSubmit={(e) => handleSubmit(e, event.id)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input placeholder="Namn *" value={formData.name} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))} required className="bg-card border-border" />
+                            <Input type="email" placeholder="E-post *" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} required className="bg-card border-border" />
+                            <Input placeholder="Telefon" value={formData.phone} onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))} className="bg-card border-border" />
+                            <Textarea placeholder="Meddelande" value={formData.message} onChange={(e) => setFormData(p => ({ ...p, message: e.target.value }))} className="bg-card border-border sm:col-span-2" />
+                            <div className="sm:col-span-2">
+                              <Button type="submit" variant="hero" className="w-full sm:w-auto" disabled={registerMutation.isPending}>
+                                {registerMutation.isPending ? "Skickar..." : "Skicka anmälan"}
+                              </Button>
+                            </div>
+                          </form>
+                        </div>
+                      ) : (
+                        <Button variant="hero" size="lg" onClick={() => setShowRegister(event.id)}>
+                          Anmäl dig
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
