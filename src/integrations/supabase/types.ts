@@ -55,39 +55,51 @@ export type Database = {
       events: {
         Row: {
           created_at: string
+          currency: string
           description: string | null
           event_date: string
           id: string
           image_url: string | null
+          internal_notes: string | null
+          internal_price_estimate: number | null
           is_published: boolean
           location: string | null
           max_participants: number | null
+          public_price: number | null
           route_points: Json | null
           title: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          currency?: string
           description?: string | null
           event_date: string
           id?: string
           image_url?: string | null
+          internal_notes?: string | null
+          internal_price_estimate?: number | null
           is_published?: boolean
           location?: string | null
           max_participants?: number | null
+          public_price?: number | null
           route_points?: Json | null
           title: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          currency?: string
           description?: string | null
           event_date?: string
           id?: string
           image_url?: string | null
+          internal_notes?: string | null
+          internal_price_estimate?: number | null
           is_published?: boolean
           location?: string | null
           max_participants?: number | null
+          public_price?: number | null
           route_points?: Json | null
           title?: string
           updated_at?: string
@@ -120,6 +132,65 @@ export type Database = {
           phone?: string | null
         }
         Relationships: []
+      }
+      journey_stops: {
+        Row: {
+          booking_reference: string | null
+          contact_info: string | null
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          internal_notes: string | null
+          is_public: boolean
+          lat: number | null
+          lng: number | null
+          name: string
+          order_index: number
+          price_per_person: number | null
+          type: string
+        }
+        Insert: {
+          booking_reference?: string | null
+          contact_info?: string | null
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          internal_notes?: string | null
+          is_public?: boolean
+          lat?: number | null
+          lng?: number | null
+          name: string
+          order_index?: number
+          price_per_person?: number | null
+          type?: string
+        }
+        Update: {
+          booking_reference?: string | null
+          contact_info?: string | null
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          internal_notes?: string | null
+          is_public?: boolean
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          order_index?: number
+          price_per_person?: number | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_stops_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       newsletter_subscribers: {
         Row: {
