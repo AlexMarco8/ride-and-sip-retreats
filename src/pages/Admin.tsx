@@ -33,6 +33,7 @@ const Admin = () => {
     max_participants: "",
     is_published: false,
   });
+  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
