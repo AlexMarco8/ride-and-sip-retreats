@@ -97,13 +97,13 @@ const Admin = () => {
   });
 
   const { data: registrations } = useQuery({
-    queryKey: ["admin-registrations", selectedEventId],
+    queryKey: ["admin-registrations", expandedEventId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("event_registrations").select("*").eq("event_id", selectedEventId!).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("event_registrations").select("*").eq("event_id", expandedEventId!).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!selectedEventId,
+    enabled: !!expandedEventId,
   });
 
   const { data: newsletterSubs } = useQuery({
