@@ -62,6 +62,7 @@ export type Database = {
           is_published: boolean
           location: string | null
           max_participants: number | null
+          route_points: Json | null
           title: string
           updated_at: string
         }
@@ -74,6 +75,7 @@ export type Database = {
           is_published?: boolean
           location?: string | null
           max_participants?: number | null
+          route_points?: Json | null
           title: string
           updated_at?: string
         }
@@ -86,6 +88,7 @@ export type Database = {
           is_published?: boolean
           location?: string | null
           max_participants?: number | null
+          route_points?: Json | null
           title?: string
           updated_at?: string
         }
